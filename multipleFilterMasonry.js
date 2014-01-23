@@ -1,60 +1,38 @@
-!function($){
+(function($){
+  'use strict';
   $.fn.multipleFilterMasonry = function(options){
-    var cache=[];
-
-    //the main job of the function is to cache the item,because we are going to filter the items later
     var init = function($container){
-      $container.find(options.itemSelector).each(function(){
-        cache.push($(this));
-      });
       $container.masonry(options);
-    }
-
-    //filter items in cache
-    var filterItems = function(selector){
-      var result=[];
-      $(cache).each(function(item){
-        $(selector).each(function(index,sel) {
-          if(cache[item].is(sel)){
-            if($.inArray(cache[item], result) === -1) result.push(cache[item]);
-          }
-        });
-      })
-      return result;
-    }
+    };
 
     //reload masonry
-    var reload = function($container,items){
-      $container.empty();
-      $(items).each(function(){
-        $($container).append($(this));
-      });
-      $container.masonry('reloadItems');
+    var reload = function($container){
       $container.masonry();
-    }
+    };
 
     var proc = function($container){
-      $(options.filtersGroupSelector).find('input[type=checkbox]').each(function(){
-        $(this).change(function(){
-          var selector = [];
-          $(options.filtersGroupSelector).find('input[type=checkbox]').each( function() {
-            if ( $(this).is(':checked') ) {
-              selector.push( '.' + $(this).val() );
-            }
+      var checkboxes=$(options.filtersGroupSelector).find('input[type=checkbox]');
+      var checkboxesLen=checkboxes.length;
+      checkboxes.change(function() {
+        var hidden=checkboxes.not(':checked');
+        var hiddenLen=hidden.length;
+        $('head style[title=multipleFilterMasonry]').remove();
+        // only update if something is unselected. If all are unselected do not update either.
+        if (hiddenLen>0 && hiddenLen!==checkboxesLen) {
+          var selectors=[];
+          hidden.each(function() {
+            selectors.push(this.value);
           });
-          var items = cache;
-          if (selector.length > 0) {
-            items = filterItems(selector);
-          }
-          reload($container,items);
-        })
-      })
-    }
+          $('<style title="multipleFilterMasonry">.'+selectors.join(',.')+'{display:none}</style>').appendTo('head');
+        }
+        reload($container);
+      });
+    };
 
     return this.each(function() {
       var $$ = $(this);
       init($$);
       proc($$);
     });
-  }
-}(window.jQuery)
+  };
+}(window.jQuery));
